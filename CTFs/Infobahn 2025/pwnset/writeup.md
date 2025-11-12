@@ -1,4 +1,4 @@
-# pwnset - Full RELRO + PIE + Canary in main, Partial RELRO + no PIE in setuid logger
+# pwnset - Full RELRO + PIE + Canary in main, No RELRO + no PIE in log
 
 ![alt text](image-3.png)
 
