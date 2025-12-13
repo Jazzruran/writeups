@@ -28,7 +28,7 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 Port **6379** stood out, because `redis` is not usually world opened. port **10000** is `webmin` instance, but I didn't have credentials at that moment.
 
 I decided to check `redis` for known CVEs, but no luck. So I decided to write SSH key, here is the python PoC:
-```
+```PY
 import os
 import argparse
 import redis
