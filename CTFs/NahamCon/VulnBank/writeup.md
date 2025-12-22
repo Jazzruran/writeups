@@ -1,7 +1,7 @@
 # VulnBank - Full RelRO + NX + PIE
 
 ## Synopsis
-VulnBank is an advanced difficulity challenge that features leaking `some data` and performing `ret2win` attack
+VulnBank is challenge that features leaking `some data` and performing `ret2win` attack
 
 ## Analysis
 
