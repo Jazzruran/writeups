@@ -8,7 +8,7 @@ We get a single **dynamically linked x86-64 executable** — `the_hinge_whisper`
 
 Inspecting mitigations in GDB/GEF:
 
-```text {title="checksec" lineNos=false}
+```
 gef➤  checksec
 [+] checksec for '/home/jzrn_/PWN/HTB/the_hinge_whisper/the_hinge_whisper'
 Canary                        : ✘
@@ -26,7 +26,7 @@ RelRO                         : Full
 
 Binary Ninja reveals 2 main functions: `main()` and `service_hatch()`:
 
-```{title="Dissasembly" lineNos=false hl_lines=[2, 3, 6]}
+```
 004011e3    ssize_t service_hatch()
 00401205        void buf // 64 bytes
 00401205        printf(format: "  [+] The keyway sits at: %p\n", &buf) // leaks &buf
@@ -49,7 +49,7 @@ It also leaks the address of `buf`, giving is a deterministic target to redirect
 
 # Stack Offset and Bounds
 
-```{title="Stack" lineNos=false}
+```
 entry -0x48  ?? ?? ?? ?? ?? ?? ?? ?? <-|
 entry -0x40  ?? ?? ?? ?? ?? ?? ?? ??   |
 entry -0x38  ?? ?? ?? ?? ?? ?? ?? ??   |
@@ -75,7 +75,7 @@ The total structure size up to the return address is **72 bytes** (64 bytes `buf
 3. Pad the payload to 72 bytes to reach `__return_addr`.
 4. Overwrite `__return_addr` with the leaked `buf` address.
 
-```python{title="exploit.py" lineNos=true}
+```python
 from pwn import *
 
 context.arch = 'amd64'
