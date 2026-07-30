@@ -6,7 +6,7 @@ A really interesting challenge where we exploit `_IO_FILE` using **House of Appl
 
 We are given a single binary along with **`glibc 2.39`** and its matching `ld`.
 
-```text {title="checksec" lineNos=false}
+```text
 gef➤  checksec
 [+] checksec for '/home/jzrn_/PWN/HTB/the_emptiness_machine/challenge/the_emptiness_machine'
 Canary                        : ✘
@@ -22,7 +22,7 @@ Generally speaking, `NX` makes stack **non-executable**, `PIE` randomizes the ba
 
 Binary Ninja reveals only one function:
 
-```c{title="binary ninja" lineNos=false hl_lines=[6 8]}
+```c
 004011a9    int32_t main(int32_t argc, char** argv, char** envp)
 004011c0        setbuf(fp: stdin, buf: nullptr)
 004011d4        setbuf(fp: stdout, buf: nullptr)
@@ -51,7 +51,7 @@ Example of a read buffer layout:
 
 ![img](io_file_vis.svg)
 
-```c{title="libio/bits/types/struct_FILE.h" lineNos=true hl_lines=[9 10 11 12 13 14 15 16]}
+```c
 /* The tag name of this struct is _IO_FILE to preserve historic
    C++ mangled names for functions taking FILE* arguments.
    That name should not be used in new code.  */
@@ -111,7 +111,7 @@ struct _IO_FILE_complete
 By default, `_IO_USE_OLD_IO_FILE` is not defined, so you can ignore `_IO_FILE_complete`. However, `stdin`, `stdout`, and `stderr` actually use _IO_FILE_plus instead of plain `_IO_FILE`. 
 The only difference is that `_IO_FILE_plus` appends a `vtable` pointer at the end.
 
-```c{title="libio/libioP.h" lineNos=true hl_lines=[9]}
+```c
 /* We always allocate an extra word following an _IO_FILE.
    This contains a pointer to the function jump table used.
    This is for compatibility with C++ streambuf; the word can
@@ -126,7 +126,7 @@ struct _IO_FILE_plus
 
 Here is how these structures look inside GDB for our target binary:
 
-```c{title="GDB/GEF" hl_lines=[29 43]}
+```c
 gef➤  ptype /o struct _IO_FILE
 /* offset      |    size */  type = struct _IO_FILE {
 /*      0      |       4 */    int _flags;
@@ -184,7 +184,7 @@ we can leverage it to overwrite just the least significant byte of `_IO_write_ba
 
 Let's construct the leak script:
 
-```python{title="exploit.py" lineNos=true}
+```python
 from pwn import *
 
 # context.terminal = ['zellij', 'action', 'new-pane', '-d', 'right', '--']
@@ -212,7 +212,7 @@ p.readall()
 
 Here is the debug output:
 
-```text{title="output" hl_lines=[8]}
+```text
 [DEBUG] Sent 0x21 bytes:
     00000000  00 18 ad fb  00 00 00 00  00 00 00 00  00 00 00 00  │····│····│····│····│
     00000010  00 00 00 00  00 00 00 00  00 00 00 00  00 00 00 00  │····│····│····│····│
@@ -291,7 +291,7 @@ Now we know everything we need! The final step is calculating the offsets.
 
 In GDB/GEF, I inspected `main` to place a breakpoint right after the leak step:
 
-```text{title="GDB/GEF" lineNos=false hl_lines=[30 31]}
+```text
 gef➤  disas main
 Dump of assembler code for function main:
    0x00000000000011a9 <+0>:     endbr64
@@ -336,7 +336,7 @@ End of assembler dump.
 
 I placed a breakpoint at `*main+133`:
 
-```python{title="exploit.py" lineNos=true}
+```python
 from pwn import *
 
 context.terminal = ['zellij', 'action', 'new-pane', '-d', 'right', '--']
@@ -394,7 +394,7 @@ $7 = 0x174     // offset to _wide_data
 
 And the final exploit script:
 
-```python{title="exploit.py" lineNos=true}
+```python
 from pwn import *
 
 SYSTEM_OFFSET = 0x1abef4
