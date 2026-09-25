@@ -642,7 +642,7 @@ but the fd is already opened for us in `ops_fd` - meaning we can write to it!
 
 And here is our ticket out of seccomp and straight to privilege escalation: an arbitrary 8-byte write primitive (even if heavily restricted).
 
-# стратегия
+# Strategy
 
 We can cleanly divide this challenge into two parts: userland and kernel. In userland, we need to hijack execution flow, and in the kernel, we need to escalate privileges and grab the flag.
 
