@@ -10,7 +10,7 @@ A two-stage challenge where you first take control of the current userland proce
 
 The description mentioned that this was a two-stage challenge. I downloaded and unpacked the archive, finding 6 files inside:
 
-```{title="zsh" hl_lines=[5,7,8]}
+```
 ╭─jzrn_@blog ~/writeup
 ╰─$ ls -la
 -rw-r--r-- 1 jzrn_ jzrn_  721 Sep 17 20:17 Dockerfile
@@ -33,7 +33,7 @@ Then a selection menu appeared, but as soon as I tried to interact with it, it i
 
 The first thing I decided to do was inspect `run-qemu.sh`. Here's what was inside:
 
-```sh{title="run-qemu.sh" hl_lines=[8,9,10]}
+```sh
 #!/bin/sh
 set -eu
 
@@ -59,7 +59,7 @@ From this, I gathered that the following protections are active:
 
 Next up, I unpacked `rootfs.cpio.gz` (initramfs) to see what was lurking inside, using the standard commands [from here](https://access.redhat.com/solutions/24029)
 
-```{title="zsh" hl_lines=[33,37,42]}
+```
 ╭─jzrn_@blog ~/writeup/initramfs
 ╰─$ zcat ../rootfs.cpio.gz | cpio -idmv
 bin
@@ -113,7 +113,7 @@ I spotted 3 interesting files: `init`, `blackops`, and `shadowops.ko`...
 
 Let's check out `/init` first:
 
-```sh{title="/init"}
+```sh
 #!/bin/sh
 
 mount -t proc none /proc
@@ -328,7 +328,7 @@ If we choose option 2, we get code execution via an alphanumeric shellcode, but 
 
 We can inspect the exact syscall restrictions using `seccomp-tools`. To do that without crashing `blackops`, we need to create `/dev/shadowops` in the host system first, and then run `seccomp-tools dump ./blackops:`
 
-```{title="zsh" hl_lines=[37,38,39,40,41,42,43,44,45,46]}
+```
 ╭─jzrn_@blog ~/writeup/initramfs
 ╰─$ sudo touch /dev/shadowops
 ╭─jzrn_@blog ~/writeup/initramfs
@@ -740,7 +740,7 @@ First: disabling seccomp.
 This is relatively straightforward. In `task_struct->thread_info`, there is a `flags` field where bit 8 indicates whether seccomp is active
 [(source reference)](https://elixir.bootlin.com/linux/v4.9.333/source/arch/x86/include/asm/thread_info.h#L89):
 
-```c{title="thread_info.h" hl_lines=[9]}
+```c
 #define TIF_SYSCALL_TRACE	0	/* syscall trace active */
 #define TIF_NOTIFY_RESUME	1	/* callback before returning to user */
 #define TIF_SIGPENDING		2	/* signal pending */
@@ -804,7 +804,7 @@ ffffa40e8e080000 16  0      00000000 0        0        0 2        0        23
 
 I started by getting control over `blackops`. To keep the binary from bailing out on `/dev/shadowops`, I created a dummy file on my host and set up a standard pwntools harness:
 
-```py{title="exploit.py"}
+```py
 from pwn import *
 
 context.arch='amd64'
@@ -843,7 +843,7 @@ If an instruction contains "bad" bytes, we can patch those bytes in memory at ru
 
 Here is what I came up with:
 
-```py{title="exploit.py"}
+```py
 # maybe this isn't the most effective and easiest way of doing that, but I don't care
 part1 = asm('''
 push 0x6f6f6f6f
@@ -901,7 +901,7 @@ If you survived, let me break down what's happening.
 
 First, I sent a "test" string during debugging to see what the register state looked like right at the jump:
 
-```{title="gdb" hl_lines=[1 8 9 10]}
+```
 $rax   : 0x00007f033e15e000  →  0x0000000074736574 ("test"?)
 $rbx   : 0x0
 $rcx   : 0x74736574
@@ -997,7 +997,7 @@ Quick checklist:
 
 Let's update our exploit script:
 
-```py{title="exploit.py"}
+```py
 from pwn import *
 
 context.arch='amd64'
@@ -1103,7 +1103,7 @@ As for the rest of the changes: the only difference is the target execution (`ru
 
 Now that we have the task struct address, we can disable seccomp and leak kASLR for the final privilege escalation:
 
-```py{title="exploit.py"}
+```py
 l = log.progress('disabling seccomp and leaking kASLR')
 
 # r9  = pie leak
@@ -1228,7 +1228,7 @@ And that gave me the exact offset!
 
 Now we have all the pieces for the final act. Here's the code:
 
-```py{title="exploit.py"}
+```py
 l = log.progress('getting root and printing the flag')
 
 # rewrites current->cred with init_cred to get root
