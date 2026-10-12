@@ -1,7 +1,4 @@
-+++
-draft = false
-title = 'lets get to library'
-+++
+> ai was only used during the ctf to look up glibc sources (specifically `_IO_lock`), and to translate some parts of this writeup from my native language.
 
 # TL;DR
 
